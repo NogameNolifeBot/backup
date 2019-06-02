@@ -1,20 +1,24 @@
-exports.run = async (client, message, [args]) => {
-    let response = ["Yes", "Maybe", "No", "Try again later", "Possibly", "Absolutely", "Probably not", "Outcome is looking good", "Outcome not looking good", "The stars say yes"];
+const Discord = require("discord.js")
 
-    message.channel.send(`${response[~~(Math.random() * response.length)]}, ${message.author.username}.`);    
-};
+module.exports.run = async (bot, message, args) => {
 
-exports.conf = {
-    enabled: true,
-    runIn: ["text"],
-    aliases: [],
-    permLevel: 0,
-    botPerms: []
-};
-      
-exports.help = {
-  name: "8ball",
-  category: "Fun",
-  description: "ask me anything",
-  usage: "8ball [question]"
+    let bicon = bot.user.displayAvatarURL;
+
+    let emb = new Discord.RichEmbed()
+    .setColor("#00ff00")
+    .setThumbnail(bicon)
+    .setDescription("Vote for NogameNolife if you are impreessed with it") 
+    .setTitle("Vote to NogameNolife")
+    .addField("Vote here", "[:robot:](https://discordbots.org/bot/574114242052096021)", true)
+    .setFooter("NogameNolife Bot", "https://cdn.discordapp.com/avatars/442410451121209365/4272634f3ab276ff263ff16ca3aa560a.png?size=2048")
+    .setTimestamp()
+    message.channel.send(emb)
+
+
+}
+   exports.help = {
+  name: "vote",
+  category: "General",
+  description: "vote for bot ",
+  usage: "vote"
 };
