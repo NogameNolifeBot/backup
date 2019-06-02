@@ -1,7 +1,6 @@
 const fs = require('fs');
 const http = require('http');
 const Canvas = require('canvas');
-const config = require("./config.json");
 const moment = require('moment');
 
 
