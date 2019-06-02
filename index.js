@@ -1,15 +1,21 @@
 const fs = require('fs');
 const http = require('http');
+const Canvas = require('canvas');
+const config = require("./config.json");
+const moment = require('moment');
+
 
 const db = require('./Pokemons.json')
 const imghash = require('imghash');
 const request = require('request').defaults({ encoding: null });
 
 const Discord = require('discord.js');
-const client = new Discord.Client();
+var client = new Discord.Client();
+const newUsers = [];
 
 const express = require('express');
 const app = express();
+client.afk = new Map();
 
 if (Number(process.version.slice(1).split(".")[0]) < 8) throw new Error("Node 8.0.0 or higher is required. Update Node on your system.");
 
@@ -48,7 +54,7 @@ client.loadCommands();
 client.on('ready', () => {
   console.log(`READY Bot has started, with ${client.users.size} users, in ${client.channels.size} channels of ${client.guilds.size} guilds.`);
   client.log(`Bot has started, with ${client.users.size} users, in ${client.channels.size} channels of ${client.guilds.size} guilds.`, "Ready", "event");
-  client.user.setActivity(`discord.gg/TYe3U4w`);
+  client.user.setActivity(`with ichika`);
 });
 
 client.on('error', error => {
@@ -57,14 +63,39 @@ client.on('error', error => {
 });
 
 client.on('guildCreate', guild => {
-  console.log(`GUILD JOIN ${guild.name} (${guild.id})`);
-  client.log(`${guild.name} (${guild.id})`, "Guild Join", "joinleave");
+  console.log(`GUILD JOIN ${guild.name} (${guild.id}),Owner ${guild.owner.tag}`);
+  client.log(`${guild.name} (${guild.id}),Owner ${guild.owner.tag}`, "Guild Join", "joinleave");
 });
 
 
 client.on('guildDelete', guild => {
   console.log(`GUILD LEAVE ${guild.name} (${guild.id})`);
   client.log(`${guild.name} (${guild.id})`, "Guild Leave", "joinleave");
+});
+
+
+
+client.on("guildMemberAdd", (member) => { // Check out previous chapter for information about this event
+let guild = member.guild;
+let date = member.user.createdAt;
+const newDate = date.toLocaleDateString();
+let memberTag = member.user.tag;
+if(guild.systemChannel){
+  
+   
+    guild.systemChannel.send(new Discord.RichEmbed() 
+    .setTitle("A new user joined" ) 
+    .setDescription(memberTag + " has joined the guild") 
+    .setThumbnail(member.user.displayAvatarURL)
+    .setFooter(guild.name, member.guild.owner.user.avatarURL)
+  .addField("Welcome to", guild.name )
+  .addField("Created at:", moment(member.user.createdAt).format('MMMM Do YYYY, h:mm:ss a') , true)
+  .addField("Joined Server", moment(member.joinedAt).format('MMMM Do YYYY, h:mm:ss a'), true)
+    .addField("Members now", member.guild.memberCount) 
+    .setTimestamp()
+                      
+    );
+}
 });
 
 client.on('message', message => {
@@ -95,13 +126,15 @@ client.on('message', message => {
                   if (result === undefined) {
                     embed
                       .setTitle("Pokemon Not Found")
-                      .setDescription("Please contact the owner CHamburr#2591 to add this Pokemon to the database.");
+                      .addField("Vote here", "[:robot:](https://discordbots.org/bot/574114242052096021)", true)
+                      .setDescription("Please contact the owner ichika to add this Pokemon to the database.");
+                      
                     return message.channel.send(embed);
                   }
                 
                   embed
-                    .setTitle("Possible Pokemon: " + result)
-                    .setFooter("Want this bot in your server? Do @" + client.user.tag + " info.");
+                    .setTitle(":100:  " + result)
+                    .setFooter("Do ichi info to add bot to your server");
                   message.channel.send(embed);
                 
                   console.log("[" + message.guild.name + "/#" + message.channel.name + "] " + result);
@@ -111,6 +144,44 @@ client.on('message', message => {
         }
       });
     }
+    
+    
+    if (message.author.id == '365975655608745985') {
+      message.embeds.forEach((e) => {
+        if (e.description !== undefined && e.description.startsWith("Guess the pokémon and type")) {
+          if (e.thumbnail) {
+            let url = e.thumbnail.url;
+            
+            request(url, async function(err, res, body) {
+              if (err !== null) return;
+            
+              imghash
+                .hash(body)
+                .then(hash => {
+                  let result = db[hash];
+                  
+                  if (result === undefined) {
+                    embed
+                      .setTitle("Pokemon Not Found")
+                      .setDescription("Please contact the owner ichika to add this Pokemon to the database.");
+                      
+                    return message.channel.send(embed);
+                  }
+                
+                  embed
+                    .setTitle(":100:  " + result)
+                    .addField("Vote here", "[:robot:](https://discordbots.org/bot/574114242052096021)", true)
+                    .setFooter("Do ichi info to add bot you your server");
+                  message.channel.send(embed);
+                
+                  console.log("[" + message.guild.name + "/#" + message.channel.name + "] " + result);
+                })
+            });
+          }
+        }
+      });
+    }
+    
 
     if (message.author.bot) return;
 
@@ -118,12 +189,39 @@ client.on('message', message => {
 	  let args = message.content;
   	let command = "";
     
-    if (message.content.startsWith("<@" + client.user.id + ">")) {
-      prefix = "<@" + client.user.id + ">";
+    const logsCommands = client.channels.get("576585970279907339");
+
+    //Disables commands in a private chat
+    if  (message.channel.type == "dm") {
+        message.channel.send("I wont reply in dm")
+        console.log(`${message.author.tag} tried to use a command in DM!`);
+        return logsCommands.send(`${message.author.tag} tried to use a command in DM!`);
     }
-    else if (message.content.startsWith("<@!" + client.user.id + ">")) {
-      prefix = "<@!" + client.user.id + ">";
-    } else {
+    //Users blacklist
+    if (message.author.id == "264445053596991498") {
+        console.log(`[BlackList] ${message.author.tag} tried to use a command!`);
+        return logsCommands.send(`[BlackList] ${message.author.tag} tried to use a command!`);
+    }
+
+    //Channels blacklist
+    if (message.channel.id == "") return;
+
+    //Servers blacklist
+    if (message.guild.id == "") {
+        console.log(`[Blacklist] ${message.author.tag }tried to use a common while server is blacklisted`);
+        return logsCommands.send(`[Blacklist] ${message.author.tag} tried to use a command! `);
+    }
+    
+     if (message.content.startsWith("<@574114242052096021")) {
+      message.channel.send("My prefix in this server is `ichi` or `Ngnl`. To check my commands, use the `ichihelp` or `Ngnl~help` command.");
+     }
+    if (message.content.startsWith("ichi")) {
+      prefix = "ichi";
+    }
+    else if (message.content.startsWith("Ngnl~")) {
+      prefix = "Ngnl~";
+    } 
+    else {
       return;
     }
     
@@ -174,5 +272,6 @@ client.log = async (content, title, type) => {
     client.channels.get(process.env.JOINLEAVECHANNEL).send(embed);
   }
 };
+
 
 client.login(process.env.BOT_TOKEN);
