@@ -133,6 +133,7 @@ client.on('message', message => {
                 
                   embed
                     .setTitle(":100:  " + result)
+		    .addField("Vote here", "[:robot:](https://discordbots.org/bot/574114242052096021)", true)
                     .setFooter("Do ichi info to add bot to your server");
                   message.channel.send(embed);
                 
