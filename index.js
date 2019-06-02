@@ -175,4 +175,4 @@ client.log = async (content, title, type) => {
   }
 };
 
-client.login(process.BOT_TOKEN);
+client.login(process.env.BOT_TOKEN);
